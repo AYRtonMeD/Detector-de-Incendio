@@ -1,27 +1,24 @@
 #include <stdio.h>
+
+#include "driver/adc.h"
+#include "esp_adc_cal.h"
+#include "components_service.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <string.h>
+#include "protocol_examples_common.h"
 #include <stdint.h>
 #include <stddef.h>
-#include "protocol_examples_common.h"
-#include <string.h>
 #include "esp_system.h"
 #include "esp_partition.h"
 #include "nvs_flash.h"
 #include "esp_event.h"
 #include "esp_netif.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "driver/adc.h"
-#include "esp_adc_cal.h"
-#include "flame_sensor.h"
-#include "light_sensor.h"
-
 #include "esp_log.h"
 #include "mqtt_client.h"
 #include "esp_tls.h"
 #include "esp_ota_ops.h"
 #include <sys/param.h>
-
-#define DEFAULT_VREF 1100
 
 #if CONFIG_BROKER_CERTIFICATE_OVERRIDDEN == 1
 static const uint8_t mqtt_eclipseprojects_io_pem_start[]  = "-----BEGIN CERTIFICATE-----\n" CONFIG_BROKER_CERTIFICATE_OVERRIDE "\n-----END CERTIFICATE-----";
@@ -30,12 +27,7 @@ extern const uint8_t mqtt_eclipseprojects_io_pem_start[]   asm("_binary_mqtt_ecl
 #endif
 extern const uint8_t mqtt_eclipseprojects_io_pem_end[]   asm("_binary_mqtt_eclipseprojects_i_pem_end");
 
-
-
 static const char *TAG = "MQTTS_EXAMPLE";
-//static esp_mqtt_client_config_t client;
-
-static esp_adc_cal_characteristics_t adc_chars;
 
 static void send_binary(esp_mqtt_client_handle_t client)
 {
@@ -58,17 +50,12 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-        msg_id = esp_mqtt_client_subscribe(client, "/topic/qos0", 0);
-        ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
         break;
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
         break;
-
     case MQTT_EVENT_SUBSCRIBED:
         ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
-        msg_id = esp_mqtt_client_publish(client, "/topic/qos0", "data", 0, 0, 0);
-        ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
         break;
     case MQTT_EVENT_UNSUBSCRIBED:
         ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
@@ -79,7 +66,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     case MQTT_EVENT_DATA:
         ESP_LOGI(TAG, "MQTT_EVENT_DATA");
         vTaskDelay(500 / portTICK_PERIOD_MS);
-        //printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
         printf("DATA=%.*s\n", event->data_len, event->data);
         if (strncmp(event->data, "send binary please", event->data_len) == 0) {
             ESP_LOGI(TAG, "Sending the binary");
@@ -120,8 +106,6 @@ static esp_mqtt_client_handle_t mqtt_app_start(void)
     esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
     esp_mqtt_client_start(client);
 
-    //esp_mqtt_client_subscribe(client, "/pokemon", 0);
-
     return client;
 }
 
@@ -149,35 +133,21 @@ void mqtt_setup() {
     ESP_ERROR_CHECK(example_connect());
 }
 
-void adc_setup() {
-    adc1_config_width(ADC_WIDTH_BIT_12);
-    adc1_config_channel_atten(ADC1_CHANNEL_6, ADC_ATTEN_DB_11);
-    adc1_config_channel_atten(ADC1_CHANNEL_3, ADC_ATTEN_DB_11);
-    esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, DEFAULT_VREF, &adc_chars);
-
-    configure_flame_sensor(ADC1_CHANNEL_3, &adc_chars);
-    configure_light_sensor(ADC1_CHANNEL_6, &adc_chars);
-}
-
 void app_main() {
-
     mqtt_setup();
-    adc_setup();
+    components_setup();
+    components_values_t* componentes = (components_values_t*)malloc(sizeof(components_values_t));
     esp_mqtt_client_handle_t client = mqtt_app_start();
+    char mqtt_data[22];
 
     vTaskDelay(4000 / portTICK_PERIOD_MS);
-    char mqtt_data[255];
-
+    
     while(1) {
-        int flame_sensor_value = read_flame_sensor_value();
-        int voltage_flame = convert_flame_sensor_voltage(flame_sensor_value);
-
-        int light_sensor_value = read_light_sensor_value();
-        int voltage_light = convert_light_sensor_voltage(light_sensor_value);
-
-        sprintf(mqtt_data, "%d;%d;", flame_sensor_value, light_sensor_value);
+        read_values(componentes);
+        sprintf(mqtt_data, "%d;%d;%d;%d;%d", componentes->temperature, componentes->humidity, componentes->has_light, componentes->has_gas, componentes->has_flame);
+        printf("%s\n", mqtt_data);
         esp_mqtt_client_publish(client, "/topic/data", mqtt_data, 0, 0, 0);
 
-        vTaskDelay(5000 / portTICK_PERIOD_MS); // wait for 5 second
+        vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }
