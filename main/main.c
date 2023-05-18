@@ -1,13 +1,13 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
+#include "protocol_examples_common.h"
 #include <string.h>
 #include "esp_system.h"
 #include "esp_partition.h"
 #include "nvs_flash.h"
 #include "esp_event.h"
 #include "esp_netif.h"
-#include "protocol_examples_common.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/adc.h"
@@ -175,7 +175,7 @@ void app_main() {
         int light_sensor_value = read_light_sensor_value();
         int voltage_light = convert_light_sensor_voltage(light_sensor_value);
 
-        sprintf(mqtt_data, "%d;%d", voltage_flame, voltage_light);
+        sprintf(mqtt_data, "%d;%d;", flame_sensor_value, light_sensor_value);
         esp_mqtt_client_publish(client, "/topic/data", mqtt_data, 0, 0, 0);
 
         vTaskDelay(5000 / portTICK_PERIOD_MS); // wait for 5 second
