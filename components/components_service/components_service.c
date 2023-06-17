@@ -7,10 +7,12 @@
 #include "light_sensor.h"
 #include "gas_sensor.h"
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
 #define TEMP_HUMI_SENSOR 22
 #define GAS_SENSOR 23
 #define FLAME_SENSOR 6
-#define LIGHT_SENSOR 19
 
 #define DEFAULT_VREF 1100
 
@@ -23,14 +25,12 @@ void components_setup() {
     esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, DEFAULT_VREF, &adc_chars);
 
     configure_flame_sensor(FLAME_SENSOR, &adc_chars);
-    light_sensor_init(LIGHT_SENSOR);
     gas_sensor_init(GAS_SENSOR);
 }
 
 void read_values(components_values_t* values)
-{
-  dht_read_data(DHT_TYPE_DHT11, TEMP_HUMI_SENSOR, &values->humidity, &values->temperature);
+{ 
+  dht_read_float_data(DHT_TYPE_DHT11, TEMP_HUMI_SENSOR, &values->humidity, &values->temperature);
   values->has_gas = gas_sensor_read(GAS_SENSOR);
   values->has_flame = flame_sensor_read(FLAME_SENSOR);
-  values->has_light = light_sensor_read(LIGHT_SENSOR);
 }

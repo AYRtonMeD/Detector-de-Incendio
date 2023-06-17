@@ -25,10 +25,10 @@ int flame_sensor_read() {
 
   adc_reading /= NO_OF_SAMPLES;
   printf("%d\n", adc_reading);
-  if (adc_reading < 100) {
-    return 0;
+  if (adc_reading > 3800) {
+    return 1;
   }
   else {
-    return 1;
+    return 0;
   }
 }

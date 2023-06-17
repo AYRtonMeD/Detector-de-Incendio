@@ -1,7 +1,6 @@
 typedef struct Components_Values {
-  int16_t temperature;
-  int16_t humidity;
-  int has_light;
+  float temperature;
+  float humidity;
   int has_gas;
   int has_flame;
 } components_values_t;
