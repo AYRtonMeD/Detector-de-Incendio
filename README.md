@@ -1,5 +1,10 @@
-https://docs.google.com/document/d/1gwVQL7dMqBkZ1TEwQCZ6Jq92ixEzXQKLwWla8MCfKsk/edit?usp=sharing
+Projeto da disciplina de IoT - IFPB
 
-https://docs.google.com/presentation/d/1yoQDQUh6QsVpU4AmdN-e_BUuSYkb37fNiOF2pSvGwFs/edit?usp=drivesdk
+O projeto utiliza destes conceitos de IoT para a criação de um sistema de
+detecção de incêndios, sendo uma aplicação residencial, composta por um
+firmware, um gateway, um servidor MQTT, um banco de dados e um aplicativo
+mobile.
 
-Pojeto do sprinkle: https://github.com/AYRtonMeD/detector-de-incendio-sprinkler
+Link projeto do sprinkle: https://github.com/AYRtonMeD/detector-de-incendio-sprinkler
+Link repositório do aplicativo: https://github.com/AllanBastos/iot-incedio-app
+Link reporitório do backend: https://github.com/AllanBastos/detector-de-incendio-backend
