@@ -24,8 +24,7 @@ int flame_sensor_read() {
   }
 
   adc_reading /= NO_OF_SAMPLES;
-  printf("%d\n", adc_reading);
-  if (adc_reading > 3800) {
+  if (adc_reading > 20) {
     return 1;
   }
   else {
