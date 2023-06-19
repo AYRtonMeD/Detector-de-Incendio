@@ -15,7 +15,7 @@ void app_main() {
 
     vTaskDelay(4000 / portTICK_PERIOD_MS);
     while(1) {
-        vTaskDelay(1500 / portTICK_PERIOD_MS);
+        vTaskDelay(5000 / portTICK_PERIOD_MS);
         read_values(componentes);
         sprintf(mqtt_data, "%d;%d;%d;%d;", (int)componentes->temperature, (int)componentes->humidity, componentes->has_gas, componentes->has_flame);
         printf("%s\n", mqtt_data);
